@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MicroERP Repuestos | Versión Lite (HTML/CSS/JS)</title>
+  <!--
+    Proyecto: MicroERP para microempresa de repuestos automotrices
+    Requerimientos del usuario:
+      - Sin frameworks ni librerías externas; solo HTML, CSS y JS puro (para VSCode)
+      - Secciones:
+          1) Principal (Dashboard + Historial de transacciones)
+          2) Inventario de repuestos (código, nombre, cantidad, P. costo, costo total, P. venta, ganancia por venta)
+          3) CRM y Ventas (Contactos, Empresas, Cotizaciones/Facturas)
+          4) Proyectos y Tareas (Proyectos, Tareas dependientes, Calendario modificable, Gantt dependiente)
+          5) Apuntes (tipo intranet con páginas a la izquierda y editor a la derecha)
+          6) RR.HH. (Empleados, Ausencias, Turnos, Evaluaciones, Organigrama, Onboarding checklist)
+          7) Exportador (panel para imprimir/exportar a PDF cada sección y exportar imágenes de gráficos)
+      - Interactividad esencial: añadir / eliminar elementos, navegación, vista ordenada
+      - Gráficos sin librerías (canvas 2D)
+      - Persistencia local mínima con localStorage (sin APIs)
+      - Colores distintos al proyecto anterior; estética limpia, simple, espaciosa
+      - Entregable en bloques ~500 líneas
+
+    Bloque 1 (~1–500):
+      - Estructura general, estilos base, layout sidebar + topbar
+      - Sección Principal con tarjetas resumen y gráfico de ingresos (línea)
+      - Historial de transacciones con tabla + formulario básico (agregar/eliminar)
+      - Infraestructura de router, store (localStorage), utilidades de fecha
+      - Sistema simple de exportación por impresión de sección
+  -->
+  
+  <link rel="stylesheet" href="./styles/main.css" />
+  <link rel="stylesheet" href="./js/blocks/01-dashboard/dashboard.css" />
+  <link rel="stylesheet" href="./js/blocks/02-inventario/inventario.css" />
+  <link rel="stylesheet" href="./js/blocks/03-crm/crm.css" />
+  <link rel="stylesheet" href="./js/blocks/04-proyectos/proyectos.css" />
+  <link rel="stylesheet" href="./js/blocks/05-rrhh/rrhh.css" />
+
+</head>
+<body>
+
+    <!-- Dialogo y formulario para añadir/editar repuesto -->
+<dialog id="invDialog">
+  <form id="invForm" method="dialog" style="min-width:420px">
+    <h3 id="invDialogTitle">Nuevo repuesto</h3>
+    <div class="row" style="grid-template-columns:repeat(2,1fr)">
+      <div><label>Código</label><input name="codigo" required></div>
+      <div><label>Nombre</label><input name="nombre" required></div>
+      <div><label>Cantidad</label><input name="cantidad" type="number" min="0" required></div>
+      <div><label>PU Costo</label><input name="puc" type="number" step="0.01" min="0" required></div>
+      <div><label>PU Venta</label><input name="puv" type="number" step="0.01" min="0" required></div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px">
+      <button class="btn ghost" value="cancel">Cancelar</button>
+      <button class="btn" value="confirm">Guardar</button>
+    </div>
+  </form>
+</dialog>
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside id="sidebar">
+  <button id="toggleSidebar" style="margin-bottom:12px; align-self:flex-end" aria-label="Colapsar menú">
+    <span id="toggleIcon" style="font-size:20px;">⮜</span>
+  </button>
+  <div class="brand">
+    <div class="brand-logo" aria-hidden="true"></div>
+    <h1>MicroERP </h1>
+  </div>
+
+    <nav>
+      <div class="nav-section-title">Navegación</div>
+      <div class="nav">
+        <button data-route="principal" class="active"><span class="ico"></span> Principal</button>
+        <button data-route="inventario"><span class="ico"></span> Inventario</button>
+        <button data-route="crm"><span class="ico"></span> CRM & Ventas</button>
+        <button data-route="proyectos"><span class="ico"></span> Proyectos & Tareas</button>
+        <button data-route="apuntes"><span class="ico"></span> Apuntes</button>
+        <button data-route="rrhh"><span class="ico"></span> RR.HH.</button>
+        <button data-route="export"><span class="ico"></span> Exportar</button>
+        <button data-route="soporte"><span class="ico"></span> Soporte</button>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div>Versión: <b>Lite 1.0</b></div>
+      <div>Almacenamiento: <span id="storageHint">localStorage</span></div>
+    </div>
+  </aside>
+<div id="sidebarOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.18); z-index:9"></div>
+  <!-- ===================== TOPBAR ===================== -->
+  <header id="topbar">
+    <div class="top-left">
+      <div class="crumb">Sección: <span id="crumb">Principal</span></div>
+      <span class="pill">Hoy: <span id="today"></span></span>
+    </div>
+    <div class="top-right">
+      <div class="search">
+        <input id="globalSearch" placeholder="Buscar en tablas…" />
+        <span class="hint">CTRL + K</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== MAIN ===================== -->
+  <main id="main">
+
+    <!-- ====== PRINCIPAL (Dashboard + Historial) ====== -->
+    <section class="route" id="route-principal">
+      <div class="row cols-4" id="kpiRow">
+        <div class="card kpi">
+          <div>
+            <div class="muted">Ingresos (15 días)</div>
+            <div class="value" id="kpiIngresos">S/ 0</div>
+            <div class="trend" id="kpiIngresosTrend">—</div>
+          </div>
+          <span class="pill">Objetivo: S/ <span id="kpiGoal1">5000</span></span>
+        </div>
+        <div class="card kpi">
+          <div>
+            <div class="muted">Costos (15 días)</div>
+            <div class="value" id="kpiCostos">S/ 0</div>
+            <div class="trend" id="kpiCostosTrend">—</div>
+          </div>
+          <span class="pill">Margen prom.: <span id="kpiMargen">0%</span></span>
+        </div>
+        <div class="card kpi">
+          <div>
+            <div class="muted">Ganancia Neta (15 días)</div>
+            <div class="value" id="kpiGanancia">S/ 0</div>
+            <div class="trend" id="kpiGananciaTrend">—</div>
+          </div>
+          <span class="pill ok">Meta: <span id="kpiGoal2">S/ 3000</span></span>
+        </div>
+        <div class="card kpi">
+          <div>
+            <div class="muted">Tareas pendientes</div>
+            <div class="value" id="kpiTareas">0</div>
+            <div class="trend" id="kpiTareasTrend">—</div>
+          </div>
+          <span class="pill warn">Proyectos activos: <span id="kpiProyectos">0</span></span>
+        </div>
+      </div>
+
+      <div class="row cols-2">
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px">
+            <h3>Ingresos por ventas</h3>
+            <div>
+              <select id="chartPeriod">
+                <option value="15">Últimos 15 días</option>
+                <option value="month">Mes…</option>
+                <option value="year">Año actual</option>
+              </select>
+              <select id="chartMonth" style="display:none"></select>
+              <button class="btn ghost" id="downloadChartBtn">Descargar imagen</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="salesChart" class="chart" width="900" height="260" aria-label="Gráfico de ingresos"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px">
+            <h3>Resumen rápido</h3>
+            <button class="btn" onclick="printSection('route-principal')">Exportar PDF</button>
+          </div>
+          <ul class="muted" id="quickSummary" style="margin:0; padding-left:18px; line-height:1.9">
+            <li>Top producto vendido (15 días): <b id="sumTopItem">—</b></li>
+            <li>Cliente con más compras (15 días): <b id="sumTopCliente">—</b></li>
+            <li>Ticket promedio: <b id="sumTicket">—</b></li>
+            <li>Días con ventas: <b id="sumDiasVenta">0</b> / <span id="sumBaseDias">15</span></li>
+          </ul>
+        </div>
+      </div>
+
+      
+
+
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px">
+            <h3>Historial de transacciones</h3>
+  <button class="btn" id="addTxnBtn">Añadir</button>
+  <select id="txTipoFilter" style="padding:8px 12px; border-radius:10px;">
+    <option value="">Todos los tipos</option>
+    <option value="ingreso">Ingresos empresa</option>
+    <option value="gasto">Gastos empresa</option>
+    <option value="reinversion">Reinversión capital</option>
+  </select>
+    <button class="btn ok" id="saveAllBtn">Guardar todo</button>
+  <button class="btn ok" id="backupBtn">Download backup</button>
+  <button class="btn ok" id="restoreBtn">Restore backup</button>
+<input type="file" id="restoreFile" accept=".json" style="display:none">
+<button class="btn ghost" onclick="exportTableCSV('txTable','transacciones.csv')">Exportar CSV</button>
+  <button class="btn ghost" onclick="printSection('route-principal')">Exportar PDF</button>
+</div>
+
+</div>
+        </div>
+    
+        <!-- Formulario modal sencillo -->
+        <dialog id="txnDialog">
+          <form id="txnForm" method="dialog">
+            <h3>Nueva transacción</h3>
+            <div class="row" style="grid-template-columns:repeat(3,1fr)">
+              <div>
+                <label>Fecha</label>
+                <input type="date" name="fecha" required />
+              </div>
+              <div>
+                <label>Cliente</label>
+                <input type="text" name="cliente" placeholder="Nombre del cliente" required />
+              </div>
+              <div>
+                <label>Estado</label>
+                <select name="estado">
+                  <option>Pendiente</option>
+                  <option>Cancelado</option>
+                  <option>Completado</option>
+                </select>
+              </div>
+              <div class="span-3">
+                <label>Descripción</label>
+                <input type="text" name="descripcion" placeholder="Detalle de la transacción" />
+              </div>
+              <div>
+                <label>Total (S/)</label>
+                <input type="number" name="total" step="0.01" required />
+              </div>
+              <div>
+                <label>¿Pagado?</label>
+                <select name="pagado">
+                  <option value="si">Sí</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <div>
+  <label>Tipo</label>
+  <select name="tipo" required>
+    <option value="ingreso">Ingresos empresa</option>
+    <option value="gasto">Gastos empresa</option>
+    <option value="reinversion">Reinversión capital</option>
+  </select>
+</div>
+              <div>
+                <label># Número</label>
+                <input type="text" name="numero" placeholder="AUTO si se deja vacío" />
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px">
+              <button class="btn ghost" value="cancel">Cancelar</button>
+              <button class="btn" value="confirm" type="submit">Guardar</button>
+            </div>
+          </form>
+        </dialog>
+
+        <div id="txSection">
+          <table id="txTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Descripción</th>
+                <th>Total (pagado)</th>
+                <th>Estado</th>
+                <th>Tipo</th> <!-- nueva columna -->
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="txBody">
+              <!-- filas dinámicas -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== PLACEHOLDERS de otras rutas (se completan en siguientes bloques) ====== -->
+    <section class="route" id="route-inventario" style="display:none">
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between">
+          <h3>Inventario de Repuestos</h3>
+          <div style="display:flex; gap:8px">
+            <button class="btn ok" id="addItemBtn">Añadir repuesto</button>
+            <button class="btn ghost" onclick="exportTableCSV('invTable','inventario.csv')">Exportar CSV</button>
+            <button class="btn ghost" onclick="printSection('route-inventario')">Exportar PDF</button>
+          </div>
+        </div>
+        <p class="muted">*Campo mínimo viable implementado en el siguiente bloque.</p>
+        <table id="invTable">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nombre</th>
+              <th>Cantidad</th>
+              <th>PU Costo</th>
+              <th>Costo Total</th>
+              <th>PU Venta</th>
+              <th>Ganancia por venta</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="invBody"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Visualizaciones</h3>
+        <div class="row cols-2">
+          <div class="chart-wrap"><canvas id="invBarChart" class="chart" width="900" height="260"></canvas></div>
+          <div class="chart-wrap"><canvas id="invValChart" class="chart" width="900" height="260"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="route" id="route-crm" style="display:none">
+      <div class="card">
+        <h3>CRM & Ventas</h3>
+        <p class="muted">Contactos, Empresas, Cotizaciones/Facturas (se implementará en el siguiente bloque).</p>
+        <div class="tabs">
+          <button class="active" data-crm-tab="contactos">Contactos</button>
+          <button data-crm-tab="empresas">Empresas</button>
+          <button data-crm-tab="docs">Cotizaciones / Facturas</button>
+        </div>
+        <div id="crmTabContent" class="card" style="background:transparent; border:none; padding:0">
+          <!-- contenido tab dinámico -->
+        </div>
+      </div>
+    </section>
+
+    <section class="route" id="route-proyectos" style="display:none">
+      <div class="card">
+        <h3>Proyectos & Tareas</h3>
+        <p class="muted">Incluye proyectos, tareas dependientes, calendario editable y Gantt (siguiente bloque).</p>
+      </div>
+    </section>
+
+    <section class="route" id="route-apuntes" style="display:none">
+      <div class="card">
+        <h3>Apuntes (Intranet)</h3>
+        <p class="muted">Páginas a la izquierda y editor a la derecha (siguiente bloque).</p>
+      </div>
+    </section>
+
+    <section class="route" id="route-rrhh" style="display:none">
+      <div class="card">
+        <h3>RR.HH.</h3>
+        <p class="muted">Empleados, ausencias, turnos, evaluaciones, organigrama, onboarding (siguiente bloque).</p>
+      </div>
+    </section>
+
+    <section class="route" id="route-export" style="display:none">
+      <div class="card">
+        <h3>Exportador</h3>
+        <p class="muted">Imprime / guarda como PDF secciones específicas y descarga imágenes de gráficos.</p>
+        <div class="row cols-3">
+          <div class="card">
+            <h4>Exportar Principal</h4>
+            <button class="btn" onclick="printSection('route-principal')">Imprimir/Guardar</button>
+          </div>
+          <div class="card">
+            <h4>Exportar Inventario</h4>
+            <button class="btn" onclick="printSection('route-inventario')">Imprimir/Guardar</button>
+          </div>
+          <div class="card">
+            <h4>Exportar CRM</h4>
+            <button class="btn" onclick="printSection('route-crm')">Imprimir/Guardar</button>
+          </div>
+          <div class="card">
+            <h4>Exportar Proyectos</h4>
+            <button class="btn" onclick="printSection('route-proyectos')">Imprimir/Guardar</button>
+          </div>
+          <div class="card">
+            <h4>Exportar Apuntes</h4>
+            <button class="btn" onclick="printSection('route-apuntes')">Imprimir/Guardar</button>
+          </div>
+          <div class="card">
+            <h4>Exportar RR.HH.</h4>
+            <button class="btn" onclick="printSection('route-rrhh')">Imprimir/Guardar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="route" id="route-soporte" style="display:none">
+  <div class="card">
+    <h3>Soporte e Instrucciones de Uso</h3>
+    <ul style="line-height:1.8; font-size:16px; margin-bottom:18px">
+      <li><b>Navegación:</b> Usa el menú lateral izquierdo para acceder a cada módulo del sistema.</li>
+      <li><b>Principal:</b> Visualiza tus KPIs, ingresos, costos, tareas pendientes y el historial de transacciones. Puedes filtrar, añadir, editar y eliminar transacciones.</li>
+      <li><b>Inventario:</b> Gestiona tus repuestos. Añade, edita o elimina productos. Visualiza el stock y el valor de inventario en gráficos.</li>
+      <li><b>CRM & Ventas:</b> Administra contactos, empresas y documentos (cotizaciones/facturas). Exporta o imprime la información.</li>
+      <li><b>Proyectos & Tareas:</b> Crea proyectos, asigna tareas, visualiza el calendario y el diagrama de Gantt. Marca el avance de cada tarea.</li>
+      <li><b>Apuntes:</b> Usa el editor tipo intranet para tomar notas, crear plantillas y exportar/importar documentos.</li>
+      <li><b>RR.HH.:</b> Gestiona empleados, ausencias, turnos, evaluaciones, organigrama y checklist de onboarding.</li>
+      <li><b>Exportar:</b> Imprime o guarda en PDF cualquier sección y descarga gráficos como imágenes, nota: por el momento esta opción está en mantenimiento.</li>
+      <li><b>Copia de seguridad:</b> Usa "Descargar backup" para guardar toda tu información y "Restaurar backup" para recuperarla.</li>
+      <li><b>Guardar manual:</b> El botón "Guardar todo" asegura que los cambios se almacenen en tu navegador.</li>
+      <li><b>Seguridad:</b> Todos los datos se guardan localmente en tu navegador. No se comparten ni suben a internet.</li>
+      <li><b>Recomendación:</b> Realiza copias de seguridad periódicas y guárdalas en un lugar seguro.</li>
+      <li><b>Soporte:</b> Si tienes dudas o problemas, contacta a tu proveedor o revisa este panel para instrucciones.</li>
+    </ul>
+    <div class="muted" style="font-size:14px">
+      <b>Atajos útiles:</b>
+      <ul>
+        <li><b>CTRL + K</b>: Buscar en tablas</li>
+        <li><b>CTRL + S</b>: Guardar nota en Apuntes</li>
+      </ul>
+      <b>¿Dudas?</b> Consulta este panel o solicita ayuda a tu soporte técnico.
+    </div>
+  </div>
+</section>
+  </main>
+
+    <!-- ===================== SCRIPTS ===================== -->
+  <script src="./js/shared/utils.js" defer></script>
+  <script src="./js/shared/store.js" defer></script>
+  <script src="./js/components.js" defer></script>
+  <script src="./js/blocks/01-dashboard/dashboard.js" defer></script>
+  <script src="./js/blocks/02-inventario/inventario.js" defer></script>
+  <script src="./js/blocks/03-crm/crm.js" defer></script>
+  <script src="./js/blocks/04-proyectos/proyectos.js" defer></script>
+  <script src="./js/blocks/05-rrhh/rrhh.js" defer></script>
+  <script src="./js/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+    
+    :root{
+      --bg:#0f1720;          /* azul petróleo muy oscuro */
+      --bg-soft:#121c26;     /* fondo tarjetas oscuro */
+      --panel:#0b141d;       /* sidebar/topbar */
+      --pri:#3dd6d0;         /* turquesa vivo */
+      --pri-2:#7ef5f0;       /* turquesa claro */
+      --sec:#eab308;         /* dorado */
+      --muted:#7a8a9a;       /* texto secundario */
+      --ok:#22c55e;          /* verde */
+      --warn:#f59e0b;        /* ámbar */
+      --bad:#4233cc;         /* rojo */
+      --white:#eef2f7;       /* texto base */
+      --grid:#213140;        /* color rejilla charts */
+      --shadow: 0 8px 20px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+  margin:0; background:var(--bg); color:var(--white);
+  font: 14.5px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  position: relative;
+  overflow-x: hidden;
+  
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "sidebar topbar"
+    "sidebar main";
+
+}
+    /* Sidebar */
+    aside#sidebar{
+      grid-area:sidebar; background:var(--panel); border-right:1px solid rgba(255,255,255,.05);
+      display:flex; flex-direction:column; gap:12px; padding:16px; overflow:auto;
+    }
+    .brand{display:flex; align-items:center; gap:10px; padding:8px 6px;}
+    .brand-logo{width:32px; height:32px; border-radius:10px; background:linear-gradient(135deg,var(--pri),var(--sec)); box-shadow:var(--shadow)}
+    .brand h1{font-size:16px; margin:0; letter-spacing:.3px}
+    nav .nav-section-title{margin:14px 8px 6px; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.12em}
+    .nav{
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .nav button{
+      all:unset; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; cursor:pointer;
+      color:var(--white); border:1px solid transparent;
+    }
+    .nav button:hover{background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.06)}
+    .nav button.active{background:linear-gradient(135deg, rgba(61,214,208,.15), rgba(234,179,8,.12)); border-color:rgba(61,214,208,.3)}
+    .nav .ico{width:18px; height:18px; display:inline-block; border-radius:4px; background:linear-gradient(135deg,var(--pri),var(--pri-2)); opacity:.85}
+
+    .sidebar-foot{
+      margin-top:auto; display:flex; flex-direction:column; gap:8px; color:var(--muted); font-size:12px; opacity:.9
+    }
+
+    /* Topbar */
+    header#topbar{
+      grid-area:topbar; background:var(--panel); border-bottom:1px solid rgba(255,255,255,.05);
+      display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px 16px; position:sticky; top:0; z-index:3;
+    }
+    .top-left{display:flex; align-items:center; gap:10px}
+    .crumb{font-weight:600}
+    .search{position:relative}
+    .search input{
+      background:var(--bg-soft); border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:9px 12px; color:var(--white); min-width:260px;
+      outline:none;
+    }
+    .search .hint{position:absolute; right:8px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:12px}
+
+    /* Main */
+    main#main{
+      grid-area:main; overflow:auto; padding:18px; display:flex; flex-direction:column; gap:18px;
+    }
+
+    /* Utility */
+    .row{display:grid; gap:16px}
+    .row.cols-2{grid-template-columns:1fr 1fr}
+    .row.cols-3{grid-template-columns:1fr 1fr 1fr}
+    .row.cols-4{grid-template-columns:repeat(4,1fr)}
+    .card{
+      background:var(--bg-soft); border:1px solid rgba(255,255,255,.06); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:16px;
+    }
+    .card h3{margin:0 0 10px 0; font-size:15px}
+    .muted{color:var(--muted)}
+    .pill{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:20px; background:rgba(255,255,255,.06); font-size:12px}
+    .btn{
+      all:unset; display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,var(--pri),var(--pri-2));
+      color:#0b1218; font-weight:700; padding:10px 12px; border-radius:12px; cursor:pointer;
+    }
+    .btn.ghost{background:transparent; color:var(--white); border:1px solid rgba(255,255,255,.12)}
+    .btn.warn{background:linear-gradient(135deg, var(--warn), #f8d36b)}
+    .btn.bad{background:linear-gradient(135deg, var(--bad), #ff8c8c)}
+    .btn.ok{background:linear-gradient(135deg, var(--ok), #86efac)}
+
+    table{width:100%; border-collapse:collapse; background:transparent}
+    th, td{padding:10px 8px; border-bottom:1px dashed rgba(255,255,255,.08); text-align:left}
+    thead th{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em}
+    tbody tr:hover{background:rgba(255,255,255,.03)}
+
+    input[type="text"], input[type="number"], input[type="date"], select, textarea{
+      width:100%; padding:9px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.08); background:#0d1721; color:var(--white);
+      outline:none;
+    }
+    textarea{min-height:120px; resize:vertical}
+    form .row{grid-template-columns:repeat(4, 1fr)}
+    form .row .span-2{grid-column:span 2}
+    form .row .span-3{grid-column:span 3}
+    .right{justify-self:end}
+
+    /* KPI Cards */
+    .kpi{display:flex; align-items:flex-start; justify-content:space-between; gap:10px}
+    .kpi .value{font-size:26px; font-weight:800}
+    .kpi .trend{font-size:12px}
+
+    /* Chart Canvas container */
+    .chart-wrap{position:relative; height:260px}
+    canvas.chart{width:100%; height:260px; display:block; background:linear-gradient(180deg, rgba(61,214,208,.07), rgba(61,214,208,0)); border-radius:12px;}
+
+    /* Tabs (para subsecciones internas) */
+    .tabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px}
+    .tabs button{all:unset; padding:8px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.12); cursor:pointer}
+    .tabs button.active{background:rgba(61,214,208,.12); border-color:rgba(61,214,208,.4)}
+
+    /* Print styles para exportar por sección */
+    @media print{
+      body{grid-template-columns:1fr; grid-template-rows:1fr; grid-template-areas:"main"}
+      #sidebar, #topbar{display:none}
+      main#main{padding:0}
+      .card{page-break-inside:avoid}
+    }
+    
+
+/* Sidebar desplazable parcialmente */
+
+
+/* Mejora visual para el botón Cancelar */
+button.btn.ghost[value="cancel"] {
+  color: #eab308 !important;         /* Amarillo dorado */
+  border: 1.5px solid #eab308 !important;
+  background: rgba(234,179,8,0.08) !important;
+  font-weight: 700;
+  opacity: 1 !important;
+  transition: background 0.2s, color 0.2s;
+}
+button.btn.ghost[value="cancel"]:hover {
+  background: #eab308 !important;
+  color: #0f1720 !important;
+  border-color: #eab308 !important;
+}
+
+dialog, dialog form {
+  background: #182532 !important;
+  color: var(--white) !important;
+  border-radius: 18px !important;
+  border: none !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+dialog form {
+  box-shadow: none !important;
+}
+dialog h3 {
+  color: var(--pri);
+}
+/* Agrega separación entre KPIs y el contenido central */
+
+#kpiRow {
+  margin-bottom: 18px;
+}
+
+/* Sidebar base */
+#sidebar {
+  width: 220px;
+  transition: margin-left 0.3s ease;
+  position: relative; /* para que el botón quede dentro */
+  width: var(--sidebar-w);
+  transition: width .28s ease, padding .28s ease;
+  overflow: hidden;      /* oculta texto cuando colapse */
+  z-index: 2;
+}
+/* Sidebar colapsado */
+#sidebar.collapsed {
+  margin-left: -180px; /* ajusta este valor a tu gusto */
+}
+
+/* Botón de flecha */
+#toggleSidebar {
+  
+  
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  position:absolute; top:10px; right:20px;
+  cursor:pointer; transition: transform .28s ease;
+}
+
+/* Flecha rota cuando está colapsado */
+#sidebar.collapsed #toggleSidebar {
+  transform: rotate(180deg);
+}
+:root{
+  --sidebar-w: 220px;   /* ancho normal */
+  --sidebar-w-mini: 56px; /* ancho colapsado */
+}
+aside#sidebar{ grid-area: sidebar; }
+header#topbar{ grid-area: topbar; }
+main#main{     grid-area: main; }
+/* === Sidebar expandible con GRID (main se adapta solo) === */
+:root{
+  --sidebar-w: 220px;        /* ancho normal */
+  --sidebar-w-mini: 56px;    /* ancho colapsado (solo iconos) */
+}
+
+/* 1) Layout principal en grid: sidebar + (topbar arriba / main abajo) */
+body{
+  display: grid;
+  grid-template-columns: auto 1fr;           /* el ancho del sidebar lo define #sidebar */
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "sidebar topbar"
+    "sidebar main";
+}
+
+/* Ya tienes estas áreas; las repetimos por claridad */
+aside#sidebar{ grid-area: sidebar; }
+header#topbar{ grid-area: topbar; }
+main#main{     grid-area: main; }
+
+/* 2) Sidebar: su ancho controla la columna 1 del grid */
+#sidebar{
+  width: var(--sidebar-w);
+  transition: width .28s ease, padding .28s ease;
+  overflow: hidden;                 /* oculta texto al colapsar */
+  position: relative;
+  z-index: 2;
+}
+
+/* Botón flecha (sigue igual) */
+#toggleSidebar{
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  width: 24px; height: 24px; border-radius: 50%;
+  cursor: pointer;
+  transition: transform .28s ease;
+}
+
+/* 3) Estado colapsado: estrechamos el sidebar → la columna 1 se hace mini
+      y el área derecha (topbar + main) se expande automáticamente */
+body.sidebar-collapsed #sidebar{
+  width: var(--sidebar-w-mini);
+  padding-left: 10px; padding-right: 10px;
+}
+
+/* 4) Ocultar textos en el menú cuando está colapsado (dejamos iconos) */
+body.sidebar-collapsed #sidebar .brand h1{ display:none; }
+body.sidebar-collapsed #sidebar .nav button{
+  padding:10px;               /* más compacto */
+  gap:0;                      /* sin separación */
+  font-size: 0;               /* oculta el texto del botón */
+}
+body.sidebar-collapsed #sidebar .nav .ico{
+  margin:0;                   /* centra el icono */
+}
+
+/* 5) Rotación de la flecha en modo colapsado */
+body.sidebar-collapsed #toggleSidebar{ transform: rotate(180deg); }
+  
