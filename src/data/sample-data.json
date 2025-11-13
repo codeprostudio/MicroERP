@@ -1,0 +1,55 @@
+{
+  "txSeq": 1,
+  "transacciones": [
+    {
+      "id": 1,
+      "numero": "TX-0001",
+      "fecha": "2025-10-04",
+      "cliente": "Taller Don Pepe",
+      "descripcion": "Venta de pastillas de freno + mano de obra",
+      "total": 380.0,
+      "pagado": true,
+      "estado": "Completado"
+    }
+  ],
+  "inventario": [
+    {
+      "codigo": "REP-001",
+      "nombre": "Filtro de aceite",
+      "cantidad": 25,
+      "puc": 18.5,
+      "puv": 35.0
+    },
+    {
+      "codigo": "REP-002",
+      "nombre": "Pastillas de freno",
+      "cantidad": 40,
+      "puc": 45.0,
+      "puv": 80.0
+    },
+    {
+      "codigo": "REP-003",
+      "nombre": "Bujía",
+      "cantidad": 60,
+      "puc": 12.0,
+      "puv": 25.0
+    }
+  ],
+  "contactos": [],
+  "empresas": [],
+  "docs": [],
+  "proyectos": [],
+  "tareas": [],
+  "calendario": {},
+  "apuntes": {
+    "pages": [],
+    "content": {}
+  },
+  "rrhh": {
+    "empleados": [],
+    "ausencias": [],
+    "turnos": [],
+    "evaluaciones": [],
+    "onboarding": []
+  }
+}
